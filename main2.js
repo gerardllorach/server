@@ -273,7 +273,27 @@ writeToWS = function(id, data, res, cmdId){
 	}
 }
 
+parseDialogActs = function(rdf) {
 
+	// if rdf is not a DOM object, uncomment
+	/*
+	parser = new DOMParser();
+	rdf = parser.parseFromString(rdf,"text/xml");
+	//*/
+
+	// Retrieve all rdf:type tags
+	// example: <rdf:type rdf:resource="http://kristina-project.eu/ontologies/dialogue_actions#PersonalGreet"/>
+	types = rdf.getElementsByTagNameNS("rdf", "type");
+
+	dialogActList = new Array();
+	for (i = 0; i < types.length; i++) {
+		resource = types[i].getAttribute("resource");
+		dialogAct = resource.split("#").pop();
+		dialogActList.push(dialogAct);
+	}
+
+	return dialogActList;
+}
 
 
 
