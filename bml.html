@@ -1,0 +1,467 @@
+<!doctype html>
+<html>
+<head>
+    <title>BML Realizer</title>
+</head>
+<body>
+<div style="margin-left: 15%; margin-right: 15%; margin-top: 5%; margin-bottom: 5%;">
+<h1>BML Realizer</h1>
+
+<p>This is an informative page about how to send messages to the virtual characters. To do so you need to send a POST to&nbsp;https://webglstudio.org:8080/bml (application/json) with a BML container and instructions. The response from the petition will be sent once the block has finished.</p>
+
+<p>A better description might be found in <a href="http://www.mindmakers.org/projects/bml-1-0/wiki/Wiki"><em>BML 1.0 Standard</em></a> although not all features are implemented in the current&nbsp;version. Please revise the following document to check if the desired feature is available.</p>
+
+<h2>BML block/container</h2>
+
+<p>In contrast with the BML 1.0 Standard, this implementation uses JSON encoding instead of XML. Nevertheless, the current server converts XML to JSON, so XML messages should be accepted too.</p>
+
+<p>Each BML container should have an <em>id</em>&nbsp;and the character name (KRISTINA by default). Inside the bml container there will be the bml instructions. Additionally the composition mode could be specified (MERGE, APPEND, REPLACE). Read at the end of the document&nbsp;for further information.</p>
+
+<p>var BMLBlock = {</p>
+
+<p style="margin-left: 40px;">id:&nbsp;<em>myBlockId</em>,</p>
+
+<p style="margin-left: 40px;">character:&nbsp;&quot;KRISTINA&quot;,&nbsp;</p>
+
+<p style="margin-left: 40px;">composition: &quot;MERGE&quot;,</p>
+
+<p style="margin-left: 40px;">... <em>bml instructions</em></p>
+
+<p>}</p>
+
+<h3>H2020 KRISTINA EXCEPTION</h3>
+
+<p>Messages should be sent to&nbsp;https://webglstudio.org:8080/idle (application/json) and to&nbsp;https://webglstudio.org:8080/turn (application/json). The character name should be inside the <em>meta</em> object as <em>avatar</em>&nbsp;and the id called <em>uuid.</em></p>
+
+<p>var BMLKristinaBlock = {</p>
+
+<p style="margin-left: 40px;">meta: {</p>
+
+<p style="margin-left: 80px;">avatar: &quot;KRISTINA&quot;</p>
+
+<p style="margin-left: 40px;">},</p>
+
+<p style="margin-left: 40px;">uuid:&nbsp;<em>myBlockId</em>,</p>
+
+<p style="margin-left: 40px;">...</p>
+
+<p>}</p>
+
+<hr />
+<hr />
+<h2>BML Instructions</h2>
+
+<p>Each BML instruction should have several synchronization attributes (<em>start, end</em>) and an <em>id</em>.</p>
+
+<h3>blink</h3>
+
+<p>Makes the virtual character blink to a specified amount (default 1). The blink instruction can have four&nbsp;sync attributes (<em>start, attackPeak, relax&nbsp;</em>and <em>end</em>). The&nbsp;<strong><em>amount</em>&nbsp;</strong>attribute defines how much the eye should be closed.</p>
+
+<p>blink = {</p>
+
+<p style="margin-left: 40px;">id: &quot;blink1&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">attackPeak: 0.1,</p>
+
+<p style="margin-left: 40px;">relax: 0.1,</p>
+
+<p style="margin-left: 40px;">end: 0.5,</p>
+
+<p style="margin-left: 40px;">amount: 1</p>
+
+<p>}</p>
+
+<hr />
+<h3>face</h3>
+
+<p>The virtual character will show a facial expression and return back to its original state. The face instruction has four sync attributes (<em>start,&nbsp;attackPeak, relax&nbsp;</em>and&nbsp;<em>end</em>). The facial expression is defined by an array with two values,&nbsp;<strong><em>valaro&nbsp;</em></strong>(in reference to the valence-arousal model). The first value of the array represents valence (range -1, 1) and the second arousal (range -1, 1). Alternatively specific facial blend shapes could be controlled independently through&nbsp;<strong><em>lexeme&nbsp;</em></strong>(explained below).</p>
+
+<p>face = {</p>
+
+<p style="margin-left: 40px;">id: &quot;face1&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">attackPeak: 0.8,</p>
+
+<p style="margin-left: 40px;">relax: 1.2,</p>
+
+<p style="margin-left: 40px;">end: 2,</p>
+
+<p style="margin-left: 40px;">valaro: [0.5, 0.5]</p>
+
+<p>}</p>
+
+<h3>faceShift</h3>
+
+<p>The virtual character will shift to a facial expression and remain with it.&nbsp;The faceShift instruction has two sync attributes&nbsp;(<em>start&nbsp;</em>and&nbsp;<em>end</em>). The facial expression is defined by an array with two values,&nbsp;<strong><em>valaro&nbsp;</em></strong>(in reference to the valence-arousal model). The first value of the array represents valence (range -1, 1) and the second arousal (range -1, 1).&nbsp;Alternatively specific facial blend shapes could be controlled independently through&nbsp;<strong><em>lexeme&nbsp;</em></strong>(explained below).</p>
+
+<p>faceShift = {</p>
+
+<p style="margin-left: 40px;">id: &quot;face2&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">end: 1,</p>
+
+<p style="margin-left: 40px;">valaro: [-0.5, -0.5]</p>
+
+<p>}</p>
+
+<h3>lexeme (inside face&nbsp;or faceShift)</h3>
+
+<p>Inside the BML instructions face and faceShift the&nbsp;<em><strong>lexeme</strong></em>&nbsp;attribute can be added to control specific blend shapes. Each&nbsp;<em><strong>lexeme</strong></em>&nbsp;has two attributes:&nbsp;<em><strong>lexeme</strong></em>&nbsp;and <b><i>amount</i></b>. The first is a string defining which blend shape to control, the second is the amount of deformation (default 1). Available lexemes are: <em>LOWER_MOUTH_CORNERS, RAISE_MOUTH_CORNERS, OPEN_LIPS, OPEN_MOUTH, LOWER_BROWS, OBLIQUE_BROWS, RAISE_BROWS, WIDEN_EYES, CLOSE_EYES.</em></p>
+
+<p>faceShift = {</p>
+
+<p style="margin-left: 40px;">id: &quot;face3&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">end: 1,</p>
+
+<p style="margin-left: 40px;">lexeme: {</p>
+
+<p style="margin-left: 80px;">lexeme: &quot;RAISE_MOUTH_CORNERS&quot;,</p>
+
+<p style="margin-left: 80px;">amount: 1</p>
+
+<p style="margin-left: 40px;">}</p>
+
+<p>}</p>
+
+<p>Several lexemes can be controlled at the same time too:</p>
+
+<p>face = {</p>
+
+<p style="margin-left: 40px;">id: &quot;face4&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">attackPeak: 0.5,</p>
+
+<p style="margin-left: 40px;">relax: 1.5,</p>
+
+<p style="margin-left: 40px;">end: 2,</p>
+
+<p style="margin-left: 40px;">lexeme: [</p>
+
+<p style="margin-left: 80px;">{lexeme: &quot;OBLIQUE_BROWS&quot;, amount: 0.5},</p>
+
+<p style="margin-left: 80px;">{lexeme: &quot;CLOSE_EYES&quot;, amount: 0.3},</p>
+
+<p style="margin-left: 80px;">{lexeme: &quot;RAISE_MOUTH_CORNERS&quot;, amount: 0.7}</p>
+
+<p style="margin-left: 40px;">]</p>
+
+<p>}</p>
+
+<hr />
+<h3>gaze</h3>
+
+<p>The virtual character will change its gaze direction and return to its starting position. The gaze instruction has four sync attributes&nbsp;(<em>start,&nbsp;ready, relax&nbsp;</em>and&nbsp;<em>end</em>). Several other attributes can be defined:&nbsp;<em><strong>influence, target, offsetAngle,&nbsp;</strong></em><b><i>offsetDirection</i></b>&nbsp;and <b><i>dynamic</i></b>.</p>
+
+<p><em><strong>influence</strong></em>&nbsp;defines which part of the body should move and switch gaze. In the current implementation only&nbsp;<em>EYES&nbsp;</em>and&nbsp;<em>HEAD</em>&nbsp;are available. If the influence is set to&nbsp;<em>HEAD</em>&nbsp;the eyes will also turn.&nbsp;<em><strong>target</strong></em>&nbsp;defines where the virtual character should look:&nbsp;<em>RIGHT, LEFT, UP, DOWN, UPRIGHT, UPLEFT, DOWNRIGHT, DOWNLEFT </em>and<em> CAMERA</em>. The gaze target position can be modified by&nbsp;<em><strong>offsetAngle</strong></em>&nbsp;(degrees to turn away from target) and&nbsp;<em><strong>offsetDirection</strong></em>&nbsp;(direction to deviate).&nbsp;<em><strong>offsetDirection</strong></em>&nbsp;can be&nbsp;<em>RIGHT, LEFT, UP, DOWN, UPRIGHT, UPLEFT, DOWNRIGHT, DOWNLEFT. </em>If there is a moving target in the scene,&nbsp;<strong>dynamic</strong>&nbsp;can be set to true to make the gaze follow.</p>
+
+<p>gaze = {</p>
+
+<p style="margin-left: 40px;">id: &quot;gaze1&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">ready: 0.8,</p>
+
+<p style="margin-left: 40px;">relax:&nbsp;1.3,</p>
+
+<p style="margin-left: 40px;">end: 2,</p>
+
+<p style="margin-left: 40px;">influence: &quot;EYES&quot;,</p>
+
+<p style="margin-left: 40px;">target: &quot;CAMERA&quot;,</p>
+
+<p style="margin-left: 40px;">offsetAngle: 15,</p>
+
+<p style="margin-left: 40px;">offsetDirection: &quot;RIGHT&quot;</p>
+
+<p>}</p>
+
+<h3>gazeShift</h3>
+
+<p>The virtual character will change its gaze direction and remain there. The gazeShift instruction has two sync attributes&nbsp;(<em>start&nbsp;</em>and&nbsp;<em>end</em>). Several other attributes can be defined as in BML instruction gaze:&nbsp;<em><strong>influence, target, offsetAngle,&nbsp;</strong></em><b><i>offsetDirection</i></b>&nbsp;and&nbsp;<b><i>dynamic</i></b>.</p>
+
+<p>gazeShift = {</p>
+
+<p style="margin-left: 40px;">id: &quot;gaze2&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">end: 1,</p>
+
+<p style="margin-left: 40px;">influence: &quot;HEAD&quot;,</p>
+
+<p style="margin-left: 40px;">target: &quot;DOWN&quot;</p>
+
+<p>}</p>
+
+<hr />
+<h3>headDirectionShift</h3>
+
+<p>Permits to turn just the head and keep the eyes in the same position. The virtual character will move it&#39;s head towards the target and remain there.&nbsp;The headDirectionShift instruction has two sync attributes&nbsp;(<em>start&nbsp;</em>and&nbsp;<em>end</em>). Several other attributes can be defined as in BML instruction gaze but influence:&nbsp;<em><strong>target, offsetAngle,&nbsp;</strong></em><b><i>offsetDirection</i></b>&nbsp;and&nbsp;<b><i>dynamic</i></b>.</p>
+
+<p>headDirectionShift = {</p>
+
+<p style="margin-left: 40px;">id: &quot;head1&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">end: 1,</p>
+
+<p style="margin-left: 40px;">target: &quot;CAMERA&quot;,</p>
+
+<p style="margin-left: 40px;">offsetAngle: 10,</p>
+
+<p style="margin-left: 40px;">offsetDirection:&nbsp;&quot;DOWNLEFT&quot;</p>
+
+<p>}</p>
+
+<h3>head</h3>
+
+<p>The virtual character will perform head&nbsp;gestures. The head instruction has seven sync attributes (<em>start, ready, strokeStart, stroke, strokeEnd, relax, end</em>). The type of gesture will be defined by&nbsp;<em><strong>lexeme</strong></em>&nbsp;(<em>NOD, SHAKE, TILT</em>). Each gesture can be repeated more than once by <b><i>repetition</i></b>&nbsp;(default 0). If&nbsp;<em><strong>repetition</strong></em>&nbsp;is different than 0 the sync attribute&nbsp;<em>stroke</em>&nbsp;is not needed (as the repetition will happen between&nbsp;<em>strokeStart and&nbsp;</em><em>strokeEnd</em>). The attribute&nbsp;<em><strong>amount</strong></em>&nbsp;defnies the intensity of the head gesture.</p>
+
+<p>head = {</p>
+
+<p style="margin-left: 40px;">id: &quot;head2&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">ready: 0.3,</p>
+
+<p style="margin-left: 40px;">strokeStart: 0.3,</p>
+
+<p style="margin-left: 40px;">stroke: 1,</p>
+
+<p style="margin-left: 40px;">strokeEnd: 1.6,</p>
+
+<p style="margin-left: 40px;">relax: 1.6,</p>
+
+<p style="margin-left: 40px;">end: 2,</p>
+
+<p style="margin-left: 40px;">lexeme: &quot;NOD&quot;,</p>
+
+<p style="margin-left: 40px;">repetition: 0,</p>
+
+<p style="margin-left: 40px;">amount: 0.6</p>
+
+<p>}</p>
+
+<p><img alt="" src="http://www.mindmakers.org/attachments/download/238" /></p>
+
+<p>&nbsp;</p>
+
+<hr />
+<h3>lg (language-generation&nbsp;for KRISTINA)</h3>
+
+<p>From the KRISTINA project, the virtual character can reproduce audio and lipsyncing through a specific format. The lg instruction has two sync attributes (<em>start </em>and <em>end</em>). Other attributes are&nbsp;<em><strong>audioURL, sequence, text, textTiming, valence</strong></em>&nbsp;and <b><i>arousal</i></b>.&nbsp;<em><strong>audioURL</strong></em>&nbsp;is a &quot;https&quot; link to an audio file with the speech;&nbsp;<em><strong>sequence</strong></em><em>&nbsp;</em>is an array of vectors containing information of lip shapes (timestamp, jaw, smile, mouth air, lips closed, kiss, sad);&nbsp;<strong><em>text</em></strong>&nbsp;is the transcription of the speech;&nbsp;<em><strong>textTiming</strong></em>&nbsp;is an array of three components: an array with each transcribed word, an array with start timestamps for each word and an array with end timestamps for&nbsp;each word. The timestamps correspond to the speech audio file;&nbsp;<em><strong>valence&nbsp;</strong></em>and <b><i>arousal&nbsp;</i></b>are the emotional cue to generate appropiate gestures.</p>
+
+<p>lg = {</p>
+
+<p style="margin-left: 40px;">id: &quot;language_generation1&quot;,</p>
+
+<p style="margin-left: 40px;">start: 0,</p>
+
+<p style="margin-left: 40px;">end: 1,</p>
+
+<p style="margin-left: 40px;">audioURL: <i>https link to the audio file,</i></p>
+
+<p style="margin-left: 40px;">sequence: [</p>
+
+<p style="margin-left: 80px;">[0, 0, 0, 0, 0, 0, 0],</p>
+
+<p style="margin-left: 80px;">[0.1, 0.2, 0.1, 0, 0, 0, 0]</p>
+
+<p style="margin-left: 80px;"><em>... more lipsync information</em></p>
+
+<p style="margin-left: 40px;">],</p>
+
+<p style="margin-left: 40px;">text: &quot;Hello World&quot;,</p>
+
+<p style="margin-left: 40px;">textTiming: [</p>
+
+<p style="margin-left: 80px;">[&quot;Hello&quot;, &quot;World&quot;],</p>
+
+<p style="margin-left: 80px;">[0, 0.5],</p>
+
+<p style="margin-left: 80px;">[0.4, 1]</p>
+
+<p style="margin-left: 40px;">],</p>
+
+<p style="margin-left: 40px;">valence: 0.5,</p>
+
+<p style="margin-left: 40px;">arousal: 0.2</p>
+
+<p>}</p>
+
+<hr />
+<hr />
+<h2>Synchronization</h2>
+
+<p>Synchronization references to other bml instructions or blocks can be made. For example, we could define that a smile starts when a head nod reaches&nbsp;<em>stroke</em>&nbsp;sync attribute:</p>
+
+<p>var BMLBlock = {</p>
+
+<p style="margin-left: 40px;">id: &quot;block1&quot;,</p>
+
+<p style="margin-left: 40px;">character: &quot;KRISTINA&quot;,</p>
+
+<p style="margin-left: 40px;">head:&nbsp;{</p>
+
+<p style="margin-left: 80px;">id: &quot;head3&quot;,</p>
+
+<p style="margin-left: 80px;">start: 0,</p>
+
+<p style="margin-left: 80px;">ready: 0.3,</p>
+
+<p style="margin-left: 80px;">strokeStart: 0.3,</p>
+
+<p style="margin-left: 80px;">stroke: 1,</p>
+
+<p style="margin-left: 80px;">strokeEnd: 1.6,</p>
+
+<p style="margin-left: 80px;">relax: 1.6,</p>
+
+<p style="margin-left: 80px;">end: 2,</p>
+
+<p style="margin-left: 80px;">lexeme: &quot;NOD&quot;,</p>
+
+<p style="margin-left: 80px;">amount: 0.6</p>
+
+<p style="margin-left: 40px;">},</p>
+
+<p style="margin-left: 40px;">face:&nbsp;{</p>
+
+<p style="margin-left: 80px;">id: &quot;face5&quot;,</p>
+
+<p style="margin-left: 80px;">start: &quot;head3:stroke&quot;,</p>
+
+<p style="margin-left: 80px;">attackPeak: &quot;head3:stroke + 0.5&quot;,</p>
+
+<p style="margin-left: 80px;">relax: &quot;head3:stroke + 1&quot;,</p>
+
+<p style="margin-left: 80px;">end: &quot;head3:stroke + 1.5&quot;,</p>
+
+<p style="margin-left: 80px;">valaro: [0.8, 0.1]</p>
+
+<p style="margin-left: 40px;">}</p>
+
+<p>}</p>
+
+<p>Here is an example of synchronization references to the previous block:</p>
+
+<p>var BMLBlock2 = {</p>
+
+<blockquote>
+<p>id: &quot;block2&quot;,</p>
+
+<p>character: &quot;KRISTINA&quot;,</p>
+
+<p>gazeShift: {</p>
+
+<p style="margin-left: 40px;">id: &quot;gaze3&quot;,</p>
+
+<p style="margin-left: 40px;">start: &quot;block1:face:relax&quot;,</p>
+
+<p style="margin-left: 40px;">end:&nbsp;&quot;block1:face:relax +1&quot;,</p>
+
+<p style="margin-left: 40px;">influence: &quot;EYES&quot;,</p>
+
+<p style="margin-left: 40px;">target: &quot;UPRIGHT&quot;,</p>
+
+<p style="margin-left: 40px;">offsetAngle: &quot;25&quot;,</p>
+
+<p style="margin-left: 40px;">offsetDirection: &quot;DOWNLEFT&quot;</p>
+
+<p>}</p>
+</blockquote>
+
+<p>}</p>
+
+<hr />
+<hr />
+<h2>Composition Mode</h2>
+
+<p>When a new block arrives (BML container) the individual BML instructions are added to a stack. The&nbsp;way they are added to the stack of pending actions can be chosen with the&nbsp;<em><strong>composition</strong></em>&nbsp;attribute in each block/container. It can be set to&nbsp;<em>MERGE, APPEND&nbsp;</em>and <i>REPLACE</i>. The first setting will try to merge the new block with the existing ones. If there is a conflict between the new BML instruction and the one in the stack the new BML instruction will be discarded. The <em>APPEND</em>&nbsp;mode will add the new block to the end of the BML stack. The&nbsp;<em>REPLACE</em>&nbsp;mode will be placed just after the current block being executed, removing all the following BML blocks.</p>
+
+<p>The current implementation doesn&#39;t allow to interrupt an ongoing BML block. In the next version it will be possible to interrupt and to overwrite ongoing BML instructions.</p>
+
+<p>&nbsp;</p>
+
+<p><img alt="" src="http://www.mindmakers.org/attachments/download/237" style="height: 314px; width: 640px;" /></p>
+
+<p>&nbsp;</p>
+
+<hr />
+<hr />
+<h2>Multiple BML Instructions Syntax</h2>
+
+<p>It can happen that there are several instructions of the same type in the same block (they should not overlap each other). For this the instructions should be inside an array.</p>
+
+<p>The following BML block will make the avatar look up-right, up-left and the camera at the end.</p>
+
+<p>var BMLBlock3 = {</p>
+
+<p style="margin-left: 40px;">id: &quot;block3&quot;,</p>
+
+<p style="margin-left: 40px;">character: &quot;KRISTINA&quot;,</p>
+
+<p style="margin-left: 40px;">gazeShift: [</p>
+
+<p style="margin-left: 80px;">{</p>
+
+<p style="margin-left: 120px;">id: &quot;gaze4&quot;,</p>
+
+<p style="margin-left: 120px;">start: 0,</p>
+
+<p style="margin-left: 120px;">end: 0.5,</p>
+
+<p style="margin-left: 120px;">target: &quot;UPRIGHT&quot;,</p>
+
+<p style="margin-left: 120px;">influence: &quot;EYES&quot;</p>
+
+<p style="margin-left: 80px;">},</p>
+
+<p style="margin-left: 80px;">{</p>
+
+<p style="margin-left: 120px;">id: &quot;gaze5&quot;,</p>
+
+<p style="margin-left: 120px;">start: &quot;gaze4:end&quot;,</p>
+
+<p style="margin-left: 120px;">end:&nbsp;&quot;gaze4:end + 0.5&quot;,</p>
+
+<p style="margin-left: 120px;">target: &quot;UPLEFT&quot;,</p>
+
+<p style="margin-left: 120px;">influence: &quot;EYES&quot;</p>
+
+<p style="margin-left: 80px;">},</p>
+
+<p style="margin-left: 80px;">{</p>
+
+<p style="margin-left: 120px;">id: &quot;gaze6&quot;,</p>
+
+<p style="margin-left: 120px;">start: &quot;gaze5:end&quot;,</p>
+
+<p style="margin-left: 120px;">end: &quot;gaze5:end + 1&quot;,</p>
+
+<p style="margin-left: 120px;">target: &quot;CAMERA&quot;,</p>
+
+<p style="margin-left: 120px;">influence: &quot;EYES&quot;</p>
+
+<p style="margin-left: 80px;">}</p>
+
+<p style="margin-left: 40px;">]</p>
+
+<p>}</p>
+</div>
+</body>
+</html>
