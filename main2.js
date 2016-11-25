@@ -17,6 +17,7 @@ var http = require('https');
 var express = require('express');
 var RESTapp = express();
 var fs = require('fs');
+var path = require('path');
 var options = {
 	key: fs.readFileSync('/etc/letsencrypt/live/webglstudio.org/privkey.pem'),
 	cert: fs.readFileSync('/etc/letsencrypt/live/webglstudio.org/cert.pem')
@@ -62,19 +63,20 @@ RESTapp.post('/idle', function(req, res, next){
 		res.send("{ok:true}");
 
 });
-/*
-RESTapp.post('/verbal', function(req, res, next){
 
-	console.log("Request for: " + req.query.id + "--->" + JSON.stringify(req.body));
+RESTapp.post('/bml', function(req, res, next){
 
-	var id = req.query.id;
+	console.log("Request for: " + req.body.id + "--->" + JSON.stringify(req.body));
+
+	var id = req.body.character;
 	writeToWS(id, JSON.stringify(req.body), res, req.body.id);
 
 	if (req.body.id === undefined)
 		res.send("OK");
 
 });
-*/
+
+
 RESTapp.post('/turn', function(req, res, next){
 	res.setHeader("Content-Type","application/json");
 
@@ -122,21 +124,7 @@ RESTapp.post('/non_verbal', function(req, res, next){
 */
 
 RESTapp.get('/', function(req, res, next){
-	res.send('GTI service is up.<br><br>Services:<br>'+
-		'https://webglstudio.org:8080/idle ---- application/json<br> '+
-		'https://webglstudio.org:8080/turn ---- application/json<br>'+
-
-		'<br><br>'+
-		'BML example syntax: <br>' +
-		'{<br>' +
-		'"id": Math.floor(Math.random()*1000),<br>' +
-		'"face": {<br>' +
-		'"start": 0,<br>' +
-		'"end": 1,<br>' +
-		'"valaro": [0.5, 0.5]<br>' +
-		'},<br>' +
-		'"blink": true<br>' +
-		'}<br>');
+	res.sendFile(path.join(__dirname + '/bml.html'));
 	
 });
 
