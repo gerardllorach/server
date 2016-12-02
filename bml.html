@@ -1,15 +1,36 @@
 <!doctype html>
 <html>
 <head>
-    <title>BML Realizer</title>
+	<title>BML Realizer</title>
 </head>
 <body>
 <div style="margin-left: 15%; margin-right: 15%; margin-top: 5%; margin-bottom: 5%;">
-<h1>BML Realizer</h1>
+<h1>BML 1.0 Standard - BML Realizer</h1>
 
-<p>This is an informative page about how to send messages to the virtual characters. To do so you need to send a POST to&nbsp;https://webglstudio.org:8080/bml (application/json) with a BML container and instructions. The response from the petition will be sent once the block has finished.</p>
+<p>This is an informative page about how to send messages to the virtual characters and the current state of the BML Realizer. An example of a virtual character (character = &quot;KRISTINA&quot;) can be found in http://webglstudio.org/gerard/bml/. The current implementation supports:</p>
 
-<p>A better description might be found in <a href="http://www.mindmakers.org/projects/bml-1-0/wiki/Wiki"><em>BML 1.0 Standard</em></a> although not all features are implemented in the current&nbsp;version. Please revise the following document to check if the desired feature is available.</p>
+<ul>
+	<li>blinks</li>
+	<li>face, faceShift and facial lexemes</li>
+	<li>gaze and gazeShift</li>
+	<li>head and headDirectionShift</li>
+	<li>language-generation (H2020 Kristina)</li>
+	<li>Synchronization references</li>
+	<li>Composition modes</li>
+</ul>
+
+<p>Future planned features:</p>
+
+<ul>
+	<li>gestures</li>
+	<li>posture</li>
+	<li>speech</li>
+	<li>other synchronization features (contraint, synchronize, wait, after, before, required)</li>
+</ul>
+
+<p>To send messages&nbsp;you need to send a POST to&nbsp;https://webglstudio.org:8080/bml (application/json) with a BML container and instructions. The response from the petition will be sent once the block has finished.</p>
+
+<p>A better description might be found in <a href="http://www.mindmakers.org/projects/bml-1-0/wiki/Wiki"><em>BML 1.0 Standard</em></a> although not all features are implemented in the current&nbsp;version. Please revise the following document to check if the desired feature is available and how is the syntax</p>
 
 <h2>BML block/container</h2>
 
@@ -25,13 +46,13 @@
 
 <p style="margin-left: 40px;">composition: &quot;MERGE&quot;,</p>
 
-<p style="margin-left: 40px;">... <em>bml instructions</em></p>
+<p style="margin-left: 40px;"><em>bml instructions</em>...</p>
 
 <p>}</p>
 
 <h3>H2020 KRISTINA EXCEPTION</h3>
 
-<p>Messages should be sent to&nbsp;https://webglstudio.org:8080/idle (application/json) and to&nbsp;https://webglstudio.org:8080/turn (application/json). The character name should be inside the <em>meta</em> object as <em>avatar</em>&nbsp;and the id called <em>uuid.</em></p>
+<p>Messages should be sent to&nbsp;https://webglstudio.org:8080/idle (application/json) and to&nbsp;https://webglstudio.org:8080/turn (application/json). The character name should be inside the <em>meta</em> object as <em>avatar</em>&nbsp;, the id called <em>uuid</em> and the BML instructions and composition should be inside <em>data</em>.</p>
 
 <p>var BMLKristinaBlock = {</p>
 
@@ -43,7 +64,13 @@
 
 <p style="margin-left: 40px;">uuid:&nbsp;<em>myBlockId</em>,</p>
 
-<p style="margin-left: 40px;">...</p>
+<p style="margin-left: 40px;">data: {</p>
+
+<p style="margin-left: 80px;"><em>bml instructions...</em></p>
+
+<p style="margin-left: 80px;">composition: &quot;MERGE&quot;</p>
+
+<p style="margin-left: 40px;">}</p>
 
 <p>}</p>
 
@@ -302,6 +329,300 @@
 <p style="margin-left: 40px;">arousal: 0.2</p>
 
 <p>}</p>
+
+<p><input name="lg" type="button" onclick="sendLG()" value="Send lg sample" /></p>
+
+
+<script>
+var LGready = true;
+function sendLG(){
+	if (!LGready)
+		return;
+
+	// How to send POST messages through webglstudio.org:8080
+	var msg = {
+	    "type": "turn",
+	    "uuid": 100,
+	    "meta": {
+	        "user": "Anna",
+	        "avatar": "KRISTINA",
+	        "scenario": "babycare",
+	        "language": "de"
+	    },
+	    "data": {
+	    	"composition": "APPEND",
+	    	"mode-selection": {
+            	"verbal": {
+                	"0": "<rdf:RDF\n    xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n    xmlns:j.0=\"http://kristina-project.eu/ontologies/dialogue_actions#\" > \n  <rdf:Description rdf:about=\"http://kristina-project.eu/tmp#2e411520-ca69-4827-bf56-a5c5b8ba650a\">\n    <rdf:type rdf:resource=\"http://kristina-project.eu/ontologies/dialogue_actions#SimpleGreet\"/>\n    <j.0:isBelief rdf:datatype=\"http://www.w3.org/2001/XMLSchema#boolean\">false</j.0:isBelief>\n    <j.0:isAdvice rdf:datatype=\"http://www.w3.org/2001/XMLSchema#boolean\">false</j.0:isAdvice>\n    <j.0:isFormal rdf:datatype=\"http://www.w3.org/2001/XMLSchema#boolean\">false</j.0:isFormal>\n    <j.0:directness rdf:datatype=\"http://www.w3.org/2001/XMLSchema#float\">1.0</j.0:directness>\n    <j.0:verbosity rdf:datatype=\"http://www.w3.org/2001/XMLSchema#float\">0.0</j.0:verbosity>\n  </rdf:Description>\n  <rdf:Description rdf:about=\"http://kristina-project.eu/tmp#a8022e97-ed10-441c-ad43-688ef60efd08\">\n    <j.0:hasValence rdf:datatype=\"http://www.w3.org/2001/XMLSchema#float\">0.23190759</j.0:hasValence>\n    <j.0:hasArousal rdf:datatype=\"http://www.w3.org/2001/XMLSchema#float\">0.25</j.0:hasArousal>\n    <j.0:containsSystemAct rdf:resource=\"http://kristina-project.eu/tmp#2e411520-ca69-4827-bf56-a5c5b8ba650a\"/>\n    <rdf:type rdf:resource=\"http://kristina-project.eu/ontologies/dialogue_actions#SystemAction\"/>\n  </rdf:Description>\n</rdf:RDF>\n"
+               
+            	},
+            	"nonverbal": {
+                	"0": "<rdf:RDF\n    xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n    xmlns:j.0=\"http://kristina-project.eu/ontologies/dialogue_actions#\" > \n  <rdf:Description rdf:about=\"http://kristina-project.eu/msins0\">\n    <j.0:hasOrder rdf:datatype=\"http://www.w3.org/2001/XMLSchema#int\">0</j.0:hasOrder>\n    <j.0:hasValence rdf:datatype=\"http://www.w3.org/2001/XMLSchema#float\">0.23190759</j.0:hasValence>\n    <j.0:hasArousal rdf:datatype=\"http://www.w3.org/2001/XMLSchema#float\">0.25</j.0:hasArousal>\n    <rdf:type rdf:resource=\"http://kristina-project.eu/ontologies/dialogue_actions#SimpleGreet\"/>\n  </rdf:Description>\n</rdf:RDF>\n"
+	            }
+	        },
+	        "language-generation": [
+			  {
+			    "text": "Guten Tag! ",
+			    "audioURL": "http://kristina.taln.upf.edu/synthesizer-service/resources/100.0.wav",
+			    "duration": 0.7474166750907898,
+			    "valence": 0,
+			    "arousal": 0,
+			    "sequence": [
+			      [
+			        0.05000000074505806,
+			        0.03,
+			        0.09,
+			        0,
+			        0.318,
+			        0,
+			        0
+			      ],
+			      [
+			        0.14000000059604645,
+			        0.12,
+			        0.05,
+			        0,
+			        0.99,
+			        0,
+			        0
+			      ],
+			      [
+			        0.21518750488758087,
+			        0.072,
+			        0.24,
+			        0,
+			        0,
+			        0.06,
+			        0
+			      ],
+			      [
+			        0.2916770875453949,
+			        0.2,
+			        0.47,
+			        0,
+			        0,
+			        0,
+			        0
+			      ],
+			      [
+			        0.36269789934158325,
+			        0.108,
+			        0.15,
+			        0,
+			        0,
+			        0.24,
+			        0
+			      ],
+			      [
+			        0.4399062395095825,
+			        0.072,
+			        0.24,
+			        0,
+			        0,
+			        0.06,
+			        0
+			      ],
+			      [
+			        0.5723958611488342,
+			        0.18,
+			        0.65,
+			        0,
+			        0,
+			        0,
+			        0
+			      ],
+			      [
+			        0.7024062871932983,
+			        0.066,
+			        0.09,
+			        0,
+			        0,
+			        0.36,
+			        0
+			      ],
+			      [
+			        0.7474166750907898,
+			        0,
+			        0,
+			        0,
+			        0,
+			        0,
+			        0
+			      ]
+			    ],
+			    "textTiming": [
+			      [
+			        "guten",
+			        "tag"
+			      ],
+			      [
+			        0,
+			        0.39241665601730347
+			      ],
+			      [
+			        0.39241665601730347,
+			        0.7474166750907898
+			      ]
+			    ],
+			    "id": "speech0",
+			    "start": "0.0",
+			    "end": 0.7474166750907898
+			  },
+
+
+
+			  {
+			    "text": "Gern geschehen. ",
+			    "audioURL": "http://kristina.taln.upf.edu/synthesizer-service/resources/100.0.wav",
+			    "duration": 0.9880000352859497,
+			    "valence": 0,
+			    "arousal": 0,
+			    "sequence": [
+			      [
+			        0.02499999850988388,
+			        0.03,
+			        0.09,
+			        0,
+			        0.318,
+			        0,
+			        0
+			      ],
+			      [
+			        0.10509374737739563,
+			        0.18,
+			        0.65,
+			        0,
+			        0,
+			        0,
+			        0
+			      ],
+			      [
+			        0.19468750059604645,
+			        0.048,
+			        0.24599999999999997,
+			        0,
+			        0,
+			        0,
+			        0
+			      ],
+			      [
+			        0.273375004529953,
+			        0.108,
+			        0.15,
+			        0,
+			        0,
+			        0.24,
+			        0
+			      ],
+			      [
+			        0.3477916717529297,
+			        0.03,
+			        0.09,
+			        0,
+			        0.318,
+			        0,
+			        0
+			      ],
+			      [
+			        0.3930104076862335,
+			        0.2,
+			        0.47,
+			        0,
+			        0,
+			        0,
+			        0
+			      ],
+			      [
+			        0.4829999804496765,
+			        0,
+			        0.12,
+			        0,
+			        0.24,
+			        0.15,
+			        0
+			      ],
+			      [
+			        0.6629999876022339,
+			        0.16,
+			        0.55,
+			        0,
+			        0,
+			        0,
+			        0
+			      ],
+			      [
+			        0.7829999923706055,
+			        0.2,
+			        0.47,
+			        0,
+			        0,
+			        0,
+			        0
+			      ],
+			      [
+			        0.8930000066757202,
+			        0.108,
+			        0.15,
+			        0,
+			        0,
+			        0.24,
+			        0
+			      ],
+			      [
+			        0.9880000352859497,
+			        0,
+			        0,
+			        0,
+			        0,
+			        0,
+			        0
+			      ]
+			    ],
+			    "textTiming": [
+			      [
+			        "gern",
+			        "geschehen"
+			      ],
+			      [
+			        0,
+			        0.3175625205039978
+			      ],
+			      [
+			        0.3175625205039978,
+			        0.9880000352859497
+			      ]
+			    ],
+			    "id": "speech1",
+			    "start": "speech0:end",
+			    "end": "speech0:end+0.9880000352859497"
+			  }
+			]
+	    }
+	}
+
+
+	req = new XMLHttpRequest();
+	req.open('POST', 'https://webglstudio.org:8080/turn', true);
+	req.setRequestHeader("Content-type", "application/json;charset=UTF-8");
+
+	req.timeout = msg.data["language-generation"].duration * 2;
+	req.ontimeout = function(){console.log("Timed out")};
+
+	req.send(JSON.stringify(msg));
+	
+
+	req.onreadystatechange = function () { //Call a function when the state changes.
+	    if (req.readyState == 4 && req.status == 200) {
+	        console.log(req.responseText);
+	    }
+	}
+
+}
+
+
+</script>
+
+
 
 <hr />
 <hr />

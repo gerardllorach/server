@@ -1,4 +1,3 @@
-
 // Kristina server
 // ps -e | grep nodejs
 // nohup nodejs main2.js &
@@ -9,7 +8,7 @@
 // 3. REST server to receive data and forward to web app through websocket
 // 4. REST client to recieve data from websocket and forward to URI
 
-const PORTHTTP = 8080;
+const PORTHTTP = 8000;
 
 
 // Websocket + REST + HTTP
@@ -18,7 +17,6 @@ var http = require('https');
 var express = require('express');
 var RESTapp = express();
 var fs = require('fs');
-var path = require('path');
 var options = {
 	key: fs.readFileSync('/etc/letsencrypt/live/webglstudio.org/privkey.pem'),
 	cert: fs.readFileSync('/etc/letsencrypt/live/webglstudio.org/cert.pem')
@@ -30,14 +28,16 @@ var server = http.createServer(options, RESTapp);
 
 var bodyParser = require('body-parser');
 require('body-parser-xml')(bodyParser);
-
+//var xmlparser = require('express-xml-bodyparser');
+//var xmlparser = require('xml2js').parseString;
 
 
 RESTapp.use(bodyParser.urlencoded({limit: '2mb', extended: false }));
 RESTapp.use(bodyParser.json({limit: '2mb'}));
 RESTapp.use(bodyParser.xml({xmlParseOptions: {strict:false}}));
 
-
+//RESTapp.use(bodyParser.text()); // Use text/plain
+//RESTapp.use(xmlparser());
 
 RESTapp.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -62,24 +62,19 @@ RESTapp.post('/idle', function(req, res, next){
 		res.send("{ok:true}");
 
 });
+/*
+RESTapp.post('/verbal', function(req, res, next){
 
-RESTapp.post('/bml', function(req, res, next){
-	
-	res.setHeader("Content-Type", "application/json");
+	console.log("Request for: " + req.query.id + "--->" + JSON.stringify(req.body));
 
-	if (req.body.id === undefined || req.body.character === undefined){
-		res.send("Error: no id or character in BML block");
-		return;
-	}
-
-	console.log("Request for: " + req.body.character + "--->" + JSON.stringify(req.body));
-
-	var id = req.body.character;
+	var id = req.query.id;
 	writeToWS(id, JSON.stringify(req.body), res, req.body.id);
 
+	if (req.body.id === undefined)
+		res.send("OK");
+
 });
-
-
+*/
 RESTapp.post('/turn', function(req, res, next){
 	res.setHeader("Content-Type","application/json");
 
@@ -87,69 +82,77 @@ RESTapp.post('/turn', function(req, res, next){
 
 	console.log("Request for: " + id + "--->" + JSON.stringify(req.body));
 
-	var msg = {};
-	msg.id = req.body.uuid || "noID";
-	// Language-generation as "lg"
-	if (req.body.data["language-generation"])
-		msg.lg = req.body.data["language-generation"];
-	// Vocapia transcription as "userText"
-	if (req.body.data["vocapia-data"])
-		msg.userText = req.body.data["vocapia-data"].text;
-	// DialogueAct
-	if (req.body.data["mode-selection"]){
-		if (req.body.data["mode-selection"]["nonverbal"]){
-			// Arrange nonverbal as gestures
-			parseNonVerbal(req.body.data["mode-selection"]["nonverbal"], msg);
-		}
-	}
-	// Get meta
-	if (req.body.meta)
-		msg.meta = req.body.meta;
-	// Get time
-	if (req.body.time)
-		msg.time = req.body.time;
-	// Type of turn
-	if (req.body.type)
-		msg.type = req.body.type;
-	// Composition
-	if (req.body.data.composition)
-		msg.composition = req.body.data.composition;
-	
-
-	// Send to application
-	writeToWS(id, JSON.stringify(msg), res, req.body.uuid);
-
-	if (req.body.uuid === undefined)
+	if (req.body.data["language-generation"]){
+		var keys = Object.keys(req.body.data["language-generation"]);
+		if (keys.length != 0){
+			var msg = req.body.data["language-generation"][keys.length-1];
+			msg.cmdId = req.body.uuid;
+			msg["vocapia-data"] = req.body.data["vocapia-data"];
+			writeToWS(id, JSON.stringify(msg), res, req.body.uuid);
+		} else
+			res.send("{ok:true}");
+	}if (req.body.uuid === undefined)
 		res.send("{ok:true}");
 
 
 });
+/*
+// Old POST implementation
+RESTapp.post('/nonVerbal', function(req, res, next){
 
+	console.log("Request nonVerbal for: " + req.query.id + "--->" + JSON.stringify(req.body));
+
+	var id = req.query.id;
+
+	writeToWS(id, JSON.stringify(req.body)); // Immediate response
+
+	res.send("OK");
+});
+
+RESTapp.post('/non_verbal', function(req, res, next){
+
+	console.log("Request nonVerbal for: " + req.query.id + "--->" + JSON.stringify(req.body));
+
+	var id = req.query.id;
+
+	writeToWS(id, JSON.stringify(req.body)); // Immediate response
+
+	res.send("OK");
+});
+*/
 
 RESTapp.get('/', function(req, res, next){
-	res.sendFile(path.join(__dirname + '/bml.html'));
+	res.send('GTI service is up.<br><br>Services:<br>'+
+		'https://webglstudio.org:'+PORTHTTP+'/idle ---- application/json<br> '+
+		'https://webglstudio.org:'+PORTHTTP+'/turn ---- application/json<br>'+
+
+		'<br><br>'+
+		'BML example syntax: <br>' +
+		'{<br>' +
+		'"id": Math.floor(Math.random()*1000),<br>' +
+		'"face": {<br>' +
+		'"start": 0,<br>' +
+		'"end": 1,<br>' +
+		'"valaro": [0.5, 0.5]<br>' +
+		'},<br>' +
+		'"blink": true<br>' +
+		'}<br>');
 	
 });
 
 
 
-var parseNonVerbal = function(nonVerbal, msg){
-	var keys = Object.keys(nonVerbal);
-	msg.nonVerbal = [];
+// XML REST
+/*RESTxml = express();
+var serverXML = http.createServer(RESTxml);
 
-	for (var i = 0; i<keys.length; i++){
-		var bmlInstr = {};
-		// Get id (same as language generation)
-		bmlInstr.id = "nonVerbal" + keys[i];
-		// Get dialogue act
-		var rdf = nonVerbal[keys[i]];
-		var tmp = rdf.split("dialogue_actions#");
-		bmlInstr.dialogueAct = tmp[tmp.length-1].split("\"/")[0];
-		bmlInstr.start = "speech" + keys[i];
-		// Add to nonVerbal array
-		msg.nonVerbal.push(bmlInstr);
-	}
-}
+var xmlparser = require('express-xml-bodyparser');
+
+RESTxml.use(bodyParser.urlencoded({ extended: false }));
+RESTxml.use(xmlparser());*/
+
+
+
 
 
 
