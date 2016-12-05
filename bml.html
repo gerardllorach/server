@@ -54,6 +54,8 @@
 
 <p>Messages should be sent to&nbsp;https://webglstudio.org:8080/idle (application/json) and to&nbsp;https://webglstudio.org:8080/turn (application/json). The character name should be inside the <em>meta</em> object as <em>avatar</em>&nbsp;, the id called <em>uuid</em> and the BML instructions and composition should be inside <em>data</em>.</p>
 
+<p><u>BML instructions (idle)</u></p>
+
 <p>var BMLKristinaBlock = {</p>
 
 <p style="margin-left: 40px;">meta: {</p>
@@ -61,6 +63,8 @@
 <p style="margin-left: 80px;">avatar: &quot;KRISTINA&quot;</p>
 
 <p style="margin-left: 40px;">},</p>
+
+<p style="margin-left: 40px;">control: &quot;WAITING&quot;,</p>
 
 <p style="margin-left: 40px;">uuid:&nbsp;<em>myBlockId</em>,</p>
 
@@ -73,6 +77,79 @@
 <p style="margin-left: 40px;">}</p>
 
 <p>}</p>
+
+<p><u>Turn instructions (turn)</u></p>
+
+<p>The format of the turn message should always include the variable control which represent the different states of the agent. Control can take the values of WAITING, LISTENING, PROCESSING, UNDERSTANDING, PLANNING and SPEAKING.</p>
+
+<p>A message with language-generation information should take this form:</p>
+
+<p>var BMLKristinaLanguageGeneration = {</p>
+
+<p style="margin-left: 40px;">meta: { avatar: &quot;KRISTINA&quot; },</p>
+
+<p style="margin-left: 40px;">control: &quot;SPEAKING&quot;,</p>
+
+<p style="margin-left: 40px;">uuid:&nbsp;<em>myBlockId</em>,</p>
+
+<p style="margin-left: 40px;">data: {</p>
+
+<p style="margin-left: 80px;">vocapia-data: {text: <em>userInput</em>},</p>
+
+<p style="margin-left: 80px;">mode-selection: {</p>
+
+<p style="margin-left: 120px;">nonverbal: {0:&nbsp;<em>rdfString</em>, 1:&nbsp;<em>rdfString</em>...}</p>
+
+<p style="margin-left: 80px;">},</p>
+
+<p style="margin-left: 80px;">language-generation: [</p>
+
+<p style="margin-left: 120px;">{</p>
+
+<p style="margin-left: 160px;">id: <i>speech0</i>,</p>
+
+<p style="margin-left: 160px;">start: 0,</p>
+
+<p style="margin-left: 160px;">end: <i>audio duration</i>,</p>
+
+<p style="margin-left: 160px;">text: <em>agentSpeech</em>,</p>
+
+<p style="margin-left: 160px;">textTiming:&nbsp;<em>array with text, start and end times</em>,</p>
+
+<p style="margin-left: 160px;">audioURL:&nbsp;<em>url of audio file,</em></p>
+
+<p style="margin-left: 160px;">duration:&nbsp;<em>audio duration,</em></p>
+
+<p style="margin-left: 160px;">valence: <i>msg&#39;s valence</i>,</p>
+
+<p style="margin-left: 160px;">arousal:&nbsp;<em>msg&#39;s arousal</em>,</p>
+
+<p style="margin-left: 160px;">sequence: <em>array with l</em><em>ipsync data</em>,</p>
+
+<p style="margin-left: 120px;">},</p>
+
+<p style="margin-left: 120px;"><em>other speech instructions...</em></p>
+
+<p style="margin-left: 80px;">]</p>
+
+<p style="margin-left: 40px;">}</p>
+
+<p>}</p>
+
+<p><u>Chaning the state of the agent</u></p>
+
+<p>The state of the agent is changed by adding the parameter <em>control </em>to the messages. You can press this buttons to see how the behavior changes in the web applicaiton.</p>
+
+<table align="center" border="0" cellpadding="1" cellspacing="1" style="width:100%;">
+	<tbody>
+		<tr>
+			<td style="text-align: center;"><input name="control1" onclick="sendControl('WAITING')" type="button" value="WAITING" /></td>
+			<td style="text-align: center;"><input name="control2" onclick="sendControl('LISTENING')" type="button" value="LISTENING" /></td>
+			<td style="text-align: center;"><input name="control3" onclick="sendControl('PROCESSING')" type="button" value="PROCESSING" /></td>
+			<td style="text-align: center;"><input name="control4" onclick="sendLG()" type="button" value="SPEAKING" /></td>
+		</tr>
+	</tbody>
+</table>
 
 <hr />
 <hr />
@@ -330,10 +407,17 @@
 
 <p>}</p>
 
-<p><input name="lg" type="button" onclick="sendLG()" value="Send lg sample" /></p>
-
-
+<p><input name="lg" onclick="sendLG()" type="button" value="Send lg sample" /></p>
 <script>
+function sendControl(state){
+	var msg = {
+	    "uuid": "changeState",
+	    "meta": {"avatar": "KRISTINA"},
+	    "control": state,
+	}
+	sendToServer(msg);
+}
+
 var LGready = true;
 function sendLG(){
 	if (!LGready)
@@ -349,6 +433,7 @@ function sendLG(){
 	        "scenario": "babycare",
 	        "language": "de"
 	    },
+	    "control": "SPEAKING",
 	    "data": {
 	    	"composition": "APPEND",
 	    	"mode-selection": {
@@ -599,13 +684,16 @@ function sendLG(){
 			]
 	    }
 	}
+	sendToServer(msg);
+}
 
-
+// Send to server
+function sendToServer(msg){
 	req = new XMLHttpRequest();
 	req.open('POST', 'https://webglstudio.org:8080/turn', true);
 	req.setRequestHeader("Content-type", "application/json;charset=UTF-8");
 
-	req.timeout = msg.data["language-generation"].duration * 2;
+	req.timeout = 10;
 	req.ontimeout = function(){console.log("Timed out")};
 
 	req.send(JSON.stringify(msg));
@@ -616,13 +704,10 @@ function sendLG(){
 	        console.log(req.responseText);
 	    }
 	}
-
 }
 
 
 </script>
-
-
 
 <hr />
 <hr />

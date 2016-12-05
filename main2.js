@@ -83,15 +83,25 @@ RESTapp.post('/bml', function(req, res, next){
 RESTapp.post('/turn', function(req, res, next){
 	res.setHeader("Content-Type","application/json");
 
-	var id = req.body.meta.avatar;
+	var id = "KRISTINA";
+	// If no meta
+	if (req.body.meta)
+		if (req.body.meta.avatar)
+			id = req.body.meta.avatar;
 
 	console.log("Request for: " + id + "--->" + JSON.stringify(req.body));
+	
+	// If no data
+	if (!req.body.data)
+		req.body.data = {};
 
 	var msg = {};
 	msg.id = req.body.uuid || "noID";
 	// Language-generation as "lg"
-	if (req.body.data["language-generation"])
+	if (req.body.data["language-generation"]){
 		msg.lg = req.body.data["language-generation"];
+		msg.control = "SPEAKING";
+	}
 	// Vocapia transcription as "userText"
 	if (req.body.data["vocapia-data"])
 		msg.userText = req.body.data["vocapia-data"].text;
@@ -114,7 +124,9 @@ RESTapp.post('/turn', function(req, res, next){
 	// Composition
 	if (req.body.data.composition)
 		msg.composition = req.body.data.composition;
-	
+	// State
+	if (req.body.control)
+		msg.control = req.body.control
 
 	// Send to application
 	writeToWS(id, JSON.stringify(msg), res, req.body.uuid);
