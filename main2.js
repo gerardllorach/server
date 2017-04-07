@@ -35,7 +35,15 @@ require('body-parser-xml')(bodyParser);
 
 RESTapp.use(bodyParser.urlencoded({limit: '2mb', extended: false }));
 RESTapp.use(bodyParser.json({limit: '2mb'}));
-RESTapp.use(bodyParser.xml({xmlParseOptions: {strict:false}}));
+// https://github.com/Leonidas-from-XIV/node-xml2js#options
+RESTapp.use(bodyParser.xml({
+	xmlParseOptions: {
+		strict:false,
+		mergeAttrs: true,
+		normalizeTags: true,
+		explicitArray: false
+	}
+}));
 
 
 
@@ -63,32 +71,103 @@ RESTapp.post('/idle', function(req, res, next){
 
 });
 
+
+
+
 RESTapp.post('/bml', function(req, res, next){
 	
 	res.setHeader("Content-Type", "application/json");
+	var msg = {};
 
-	if (req.body.id === undefined || req.body.character === undefined){
-		res.send("Error: no id or character in BML block");
-		return;
+	// XML
+	if (req.body.bml){
+		block = req.body.bml;
+		//console.log(JSON.stringify(block));
+		//console.log("\n\n");
+
+		reparseXML(block);
+
+		msg = block;
+		msg.character = msg.character || msg.caracterid;
+	} else {
+		console.log("Message not identified");
+		console.log(JSON.stringify(req.body));
+		res.send("{Error: Message not identified}");
 	}
 
-	console.log("Request for: " + req.body.character + "--->" + JSON.stringify(req.body));
+	console.log("Request for: " + msg.character + "--->" + JSON.stringify(msg));
 
-	var id = req.body.character;
-	writeToWS(id, JSON.stringify(req.body), res, req.body.id);
+	var id = msg.character || "KRISTINA";
+	writeToWS(id, JSON.stringify(msg), res, msg.ID);
 
 });
 
+reparseXML = function(variable){
+	var type  = Object.prototype.toString.call(variable);
+	// Is an array
+	if (type === '[object Array]'){
+		//console.log("ARRAY1", JSON.stringify(variable));
+		for (var i = 0; i<variable.length; i++){
+			//console.log("ARRAY2", JSON.stringify(variable[i]));
+			var out = reparseXML(variable[i]);
+			if (out !== 'undefined')
+				variable[i] = out;
+			//console.log("ARRAY3", JSON.stringify(variable[i]));
+		}
+		//console.log("ARRAY4", JSON.stringify(variable));
+	}
+	// Is an object
+	else if (type === '[object Object]'){
+		//console.log("OBJ1", JSON.stringify(variable));
+		var keys = Object.keys(variable);
+		for (var i = 0; i<keys.length; i++){
+			// Reassign value with lower case key
+			var obj = variable[keys[i]];
+			//console.log("OBJ2", JSON.stringify(obj));
+			// Reparse
+			var out = reparseXML(obj);
+			if (out !== undefined)
+				obj = out;
+			// Delete from variable
+			delete variable[keys[i]];
+			// Reassign
+			variable[keys[i].toLowerCase()] = obj;
+			//console.log("OBJ3", JSON.stringify(obj));
+		}
+		return variable;
+		//console.log("OBJ4", JSON.stringify(variable));
+	}
+	// Is a string
+	else if (type === '[object String]'){
+		return variable.toLowerCase();
+	}
+}
+//var a = '{"XMLNS":"http://www.mindmakers.org/projects/BML","CHARACTER":"Greta","COMPOSITION":"replace","ID":"bml1","REACTION_DURATION":"NONE","REACTION_TYPE":"NONE","speech":{"_":"No no no.","XMLNS":"","ID":"s1","LANGUAGE":"english","START":"0.0","TEXT":"","VOICE":"cereproc","description":{"LEVEL":"1","TYPE":"gretabml","reference":"tmp/from-fml-apml.pho"},"tm":[{"ID":"tm0"},{"ID":"tm1"},{"ID":"tm2"},{"ID":"tm3"}]},"face":[{"AMOUNT":"1.000","END":"1.5277291000000002","ID":"em1_0","START":"-0.58","lexeme":{"LEXEME":"neutral"}},{"AMOUNT":"1.000","END":"1.5277291000000002","ID":"p1_2","START":"-0.58","lexeme":{"LEXEME":"Eyebrows_Frown"}},{"AMOUNT":"1.000","END":"1.9890000000000003","ID":"bc1_0","START":"-0.58","lexeme":{"LEXEME":"understand"}}],"head":[{"END":"1.5277291000000002","ID":"p1_0","LEXEME":"SHAKE","START":"-0.41937661495075645","description":{"PRIORITY":"1","TYPE":"gretabml","reference":"ShakeLeftRight","intensity":"1.000","spc.value":"0.000","tmp.value":"0.050","fld.value":"-0.050","pwr.value":"0.100","rep.value":"-0.100","opn.value":"0.000","ten.value":"0.000"}},{"END":"0.46127089999999993","ID":"bc1_1","LEXEME":"NOD","START":"-0.15375696666666708","description":{"PRIORITY":"1","TYPE":"gretabml","reference":"NodUpDown","intensity":"1.000","spc.value":"0.000","tmp.value":"0.050","fld.value":"-0.050","pwr.value":"0.100","rep.value":"-0.100","opn.value":"0.000","ten.value":"0.000"}}],"gesture":{"END":"2.39645854271667","ID":"p1_1","LEXEME":"Refuse_Ges_R","START":"-0.4344188283206015","description":{"PRIORITY":"1","TYPE":"gretabml","reference":"performative=Refuse_Ges_R","intensity":"1.000","spc.value":"0.000","tmp.value":"0.050","fld.value":"-0.050","pwr.value":"0.100","rep.value":"-0.100","opn.value":"0.000","ten.value":"0.000"}}}';
+//a = JSON.parse(a);
+//reparseXML(a)
 
-RESTapp.post('/turn', function(req, res, next){
+
+
+
+RESTapp.post('/avatar', function(req, res, next){
+	processKristina(req,res,next);
+});
+
+RESTapp.post('/turn',function(req,res,next){
+	processKristina(req,res,next);
+});
+
+processKristina = function(req,res,next){
 	res.setHeader("Content-Type","application/json");
 
 	var id = "KRISTINA";
+
 	// If no meta
 	if (req.body.meta)
 		if (req.body.meta.avatar)
 			id = req.body.meta.avatar;
 
+	id = id.toLowerCase();
 	console.log("Request for: " + id + "--->" + JSON.stringify(req.body));
 	
 	// If no data
@@ -99,8 +178,11 @@ RESTapp.post('/turn', function(req, res, next){
 	msg.id = req.body.uuid || "noID";
 	// Language-generation as "lg"
 	if (req.body.data["language-generation"]){
-		msg.lg = req.body.data["language-generation"];
-		msg.control = "SPEAKING";
+		var lg = req.body.data["language-generation"];
+		if (lg.constructor !== Array && !lg["0"]  || lg.constructor === Array ){
+			msg.lg = lg;
+			msg.control = "SPEAKING";
+		}
 	}
 	// Vocapia transcription as "userText"
 	if (req.body.data["vocapia-data"])
@@ -125,17 +207,23 @@ RESTapp.post('/turn', function(req, res, next){
 	if (req.body.data.composition)
 		msg.composition = req.body.data.composition;
 	// State
-	if (req.body.control)
-		msg.control = req.body.control
+	if (req.body.data.state)
+		msg.control = req.body.data.state;
 
 	// Send to application
-	writeToWS(id, JSON.stringify(msg), res, req.body.uuid);
+	//writeToWS(id, JSON.stringify(msg), res, msg.id);
 
 	if (req.body.uuid === undefined)
 		res.send("{ok:true}");
+	else if(msg.type == "control")
+		res.send("{"+msg.id +":true}");
+	else
+		writeToWS(id, JSON.stringify(msg), res, msg.id);
+	
 
 
-});
+
+}
 
 
 RESTapp.get('/', function(req, res, next){
@@ -304,7 +392,7 @@ console.logCopy = console.log.bind(console);
 var serverLog = [];
 console.log = function(data){
 	var date = new Date().toUTCString();
-	// Output
+	// Output (comment if you dont want comments)
 	//this.logCopy(date + ": " + data);
 
 	serverLog.push(data);
