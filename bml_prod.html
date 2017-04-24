@@ -28,7 +28,7 @@
 	<li>other synchronization features (contraint, synchronize, wait, after, before, required)</li>
 </ul>
 
-<p>To send messages&nbsp;you need to send a POST to&nbsp;https://webglstudio.org:8080/bml (application/json) with a BML container and instructions. The response from the petition will be sent once the block has finished.</p>
+<p>To send messages&nbsp;you need to send a POST to&nbsp;https://webglstudio.org:8000/bml (application/json) with a BML container and instructions. The response from the petition will be sent once the block has finished.</p>
 
 <p>A better description might be found in <a href="http://www.mindmakers.org/projects/bml-1-0/wiki/Wiki"><em>BML 1.0 Standard</em></a> although not all features are implemented in the current&nbsp;version. Please revise the following document to check if the desired feature is available and how is the syntax</p>
 
@@ -52,7 +52,7 @@
 
 <h3>H2020 KRISTINA EXCEPTION</h3>
 
-<p>Messages should be sent to&nbsp;https://webglstudio.org:8080/idle (application/json), to&nbsp;https://webglstudio.org:8080/turn (application/json) and/or to&nbsp;https://webglstudio.org:8080/avatar (application/json). The character name should be inside the <em>meta</em> object as <em>avatar</em>&nbsp;, the id called <em>uuid</em> and the BML instructions and composition should be inside <em>data</em>.</p>
+<p>Messages should be sent to&nbsp;https://webglstudio.org:8000/idle (application/json), to&nbsp;https://webglstudio.org:8000/turn (application/json) and/or to&nbsp;https://webglstudio.org:8000/avatar (application/json). The character name should be inside the <em>meta</em> object as <em>avatar</em>&nbsp;, the id called <em>uuid</em> and the BML instructions and composition should be inside <em>data</em>.</p>
 
 <p><u>BML instructions (idle)</u></p>
 
@@ -167,7 +167,7 @@ dropZoneXML.addEventListener('drop', function(e) {
 <script>
 function sendToServerXML(msg){
 	req = new XMLHttpRequest();
-	req.open('POST', 'https://webglstudio.org:8080/bml', true);
+	req.open('POST', 'https://webglstudio.org:8000/bml', true);
 	req.setRequestHeader("Content-type", "text/xml;charset=UTF-8");
 
 	req.timeout = 10000;
@@ -618,7 +618,7 @@ function sendLG(){
 	if (!LGready)
 		return;
 
-	// How to send POST messages through webglstudio.org:8080
+	// How to send POST messages through webglstudio.org:8000
 	var msg = {
 	    "type": "turn",
 	    "uuid": Math.floor(Math.random()*1000),
@@ -885,7 +885,7 @@ function sendLG(){
 // Send to server
 function sendToServer(msg){
 	req = new XMLHttpRequest();
-	req.open('POST', 'https://webglstudio.org:8080/turn', true);
+	req.open('POST', 'https://webglstudio.org:8000/turn', true);
 	req.setRequestHeader("Content-type", "application/json;charset=UTF-8");
 
 	req.timeout = 10000;

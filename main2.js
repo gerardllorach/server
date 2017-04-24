@@ -281,7 +281,7 @@ wss.on('connection', function(ws){
 				this.id = numClients++;
 			// Login id
 			else
-				this.id = data;
+				this.id = data.toLowerCase();
 
 			// Add ws to clients list
 			clients.push(this);
@@ -358,7 +358,7 @@ writeToWS = function(id, data, res, cmdId){
 			}
 			
 		else{
-			res.send("Error: client doesn't exist!");
+			res.send("Error: client doesn't exist!" + id);
 			console.log("Client doesn't exist: " + id);
 		}
 		
